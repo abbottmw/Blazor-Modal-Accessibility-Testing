@@ -1,0 +1,71 @@
+﻿@page "/"
+@using BlazorBootstrap
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+
+<div class="container">
+
+<h1>Modal Accessibility Tests</h1>
+
+<p>Dialog should be read by NVDA when opened.   When closed, focus should return to button.</p>
+
+<Modal @ref="modal"/>
+
+    <div class="d-flex flex-column mb-3 gap-3">
+        <section>
+            <div class="h3">Boostrap Blazor</div>
+            <button class="btn btn-primary" @onclick="ShowModal">Boostrap Blazor Modal</button>
+            <div class="text-success">NVDA <strong>does</strong> read modal and focus returned when closed.</div>
+        </section>
+        <section>
+            <div class="h3">Blazored Modal</div>
+            <button class="btn btn-primary" @onclick="ShowModalBlazored">Blazored Modal</button>
+            <div class="text-warning">NVDA <strong>does not</strong> read modal or focus <strong>not</strong> returned when closed.</div>
+        </section>
+        <section>
+            <div class="h4">Custom Modal</div>
+            <button class="btn btn-primary" @onclick="ShowCustomModal">Blazored Custom Modal</button>
+            <div>NVDA <strong>does not</strong> read modal or focus <strong>not</strong> returned when closed.</div>
+            <div>Focus Trap does not work with Custom Layout.</div>
+        </section>
+    </div>
+</div>
+
+
+
+@code {
+    private Modal modal = default!;
+    [CascadingParameter] 
+    public IModalService BlazoredModal { get; set; }
+
+    private async Task ShowModal()
+    {
+        await modal.ShowAsync<ModalTest>(title: "Testing Modals");
+    }
+
+    private async Task ShowModalBlazored()
+    {
+        var options = new ModalOptions
+        {
+            ActivateFocusTrap = true
+        };
+
+        BlazoredModal.Show<ModalTest>(title: "Testing Modals", options);
+    }
+
+    private async Task ShowCustomModal()
+    {
+        var options = new ModalOptions
+            {
+                UseCustomLayout = true,
+                ActivateFocusTrap = true
+            };
+
+        var parameters = new ModalParameters()
+            .Add(nameof(CustomModal.Message), "Hello Bootstrap modal!!");
+
+        BlazoredModal.Show<CustomModal>("Boostrap Modal", parameters, options);
+    }
+
+}
