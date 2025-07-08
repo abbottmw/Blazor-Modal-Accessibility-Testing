@@ -1,22 +1,61 @@
 name: Deploy to GitHub Pages
-# Run workflow on every push to the master branch
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  deploy-to-github-pages:
-    # use ubuntu-latest image to run steps on
+  build:
     runs-on: ubuntu-latest
+    
     steps:
-    #uses GitHub's checkout action to checkout code form the master branch
-    - uses: actions/checkout@v2
-    # sets up .NET Core SDK 3.1
+    - uses: actions/checkout@v4
+    
     - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.0
-
-    # publishes Blazor project to the release-folder
+        dotnet-version: 8.0.x
+    
     - name: Publish .NET Core Project
       run: dotnet publish ModalAccessibilityTest.csproj -c Release -o release --nologo
+    
+    # Fix base path for GitHub Pages (CRITICAL for your app to work!)
+    - name: Change base-tag in index.html
+      run: sed -i 's/<base href="\/" \/>/<base href="\/Blazor-Modal-Accessibility-Testing\/" \/>/g' release/wwwroot/index.html
+    
+    # Add .nojekyll file to tell GitHub Pages to not process this as a Jekyll site
+    - name: Add .nojekyll file
+      run: touch release/wwwroot/.nojekyll
+    
+    # Copy index.html to 404.html for SPA routing
+    - name: Copy index.html to 404.html
+      run: cp release/wwwroot/index.html release/wwwroot/404.html
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: release/wwwroot
+
+  # Deploy job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
