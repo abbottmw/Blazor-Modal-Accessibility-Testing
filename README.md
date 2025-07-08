@@ -8,3 +8,5 @@ Things being tested.
 
 Results are  Blazored.Modal is not being read by [NVDA](https://www.nvaccess.org/) (screen reader tested with).  
 Also other issues with focus trap and custom layouts.
+
+## [Demo](https://abbottmw.github.io/Blazor-Modal-Accessibility-Testing/)
